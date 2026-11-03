@@ -1,0 +1,65 @@
+minifin-player
+Copyright (C) 2026 Zaki. Licensed under the GNU General Public License,
+version 2 or (at your option) any later version; see LICENSE.
+
+Why GPL-2.0-or-later: the player links Onion OS's FFmpeg 2.4.14 shared
+libraries, which Onion built with --enable-gpl --enable-nonfree (libx264).
+FFmpeg's own code is LGPL-2.1-or-later and GPL-2.0-or-later, so a program
+linking that build is distributed under the GPL. GPL-2.0-or-later keeps it
+compatible with both GPLv2 and GPLv3 code.
+
+What it links at run time (none of it is shipped with the player; the
+device already has every file):
+
+  libavformat.so.56, libavcodec.so.56, libavutil.so.54, libswresample.so.1,
+  libswscale.so.3
+      FFmpeg 2.4.14, from /mnt/SDCARD/.tmp_update/lib/parasyte (Onion OS).
+      LGPL-2.1-or-later / GPL-2.0-or-later. https://ffmpeg.org
+
+  libmi_sys.so, libmi_vdec.so, libmi_divp.so, libmi_gfx.so, libmi_common.so
+      SigmaStar MI SDK, from /config/lib (device firmware). Proprietary,
+      Sigmastar Technology Corp. Used through their public C API only.
+
+  libpadsp.so
+      Onion OS / Miyoo audio shim (/mnt/SDCARD/miyoo/lib or /customer/lib),
+      loaded with dlopen() to reach Onion's audioserver.
+
+  glibc (libc, libm, libpthread, libdl) from the device.
+
+Where the build gets its headers (tools/fetch-deps.sh; every download is
+checked against a SHA-256):
+
+  FFmpeg 2.4.14 public headers, from the official release tarball
+      https://ffmpeg.org/releases/ffmpeg-2.4.14.tar.xz
+      sha256 736567ee95115876d7af7f99f2fa565417c351b748bdc05973618980da1df037
+      (configure + "make install-headers" only).
+
+  SigmaStar MI SDK headers (mi_common, mi_sys, mi_vdec, mi_divp, mi_gfx and
+  their _datatype headers), from steward-fu/sdl2 ("SDL v2.0 Ported for
+  Miyoo Mini (Plus)", LGPL-2.1 for the port itself) at commit
+  0631abc8e8916db6f9bc7e2afd0c22913d092a29, directory mini/inc. The headers
+  carry Sigmastar's copyright notice; they are fetched at build time and
+  are not part of this repository.
+
+Linking: the device's own .so files (tools/import-device-libs.sh, checked
+by SHA-256) are used as the link sysroot. libavcodec.so.56 is 45 MB and did
+not survive the device's Wi-Fi, so tools/build-linkonly-avcodec.sh can
+build a link-only copy from the same FFmpeg 2.4.14 tarball instead (same
+soname and LIBAVCODEC_56 symbol versions). Either way only the device's
+own library is loaded at run time.
+
+Vendored code:
+
+  src/third_party/font8x8.h
+      font8x8_basic.h and font8x8_ext_latin.h by Daniel Hepper, Public
+      Domain, https://github.com/dhepper/font8x8 at commit
+      8e279d2d864e79128e96188a6b9526cfa3fbfef9 (based on the public-domain
+      IBM VGA fonts via Marcel Sondaar). Only change: "static const".
+
+Reference only (read to learn the MI API call sequence, nothing copied):
+aaron201912/UuidSSDPlayer (no licence), steward-fu/sdl2's
+src/video/mini/SDL_video_mini.c (how MI_GFX draws to this framebuffer).
+
+Test media made for the tests (not in the repository): synthetic clips
+from FFmpeg's lavfi sources, and Big Buck Bunny (c) copyright 2008 Blender
+Foundation, www.bigbuckbunny.org, CC BY 3.0.

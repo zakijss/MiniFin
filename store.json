@@ -1,0 +1,17 @@
+{
+  "name": "MiniFin",
+  "folder": "MiniFin",
+  "desc": "Movies and shows from your Jellyfin server",
+  "repo": "zakijss/MiniFin",
+  "license": "MIT",
+  "version": "__VERSION__",
+  "zip": "https://github.com/zakijss/MiniFin/releases/download/v__VERSION__/minifin-__VERSION__.zip",
+  "sha256": "__SHA256__",
+  "size": __SIZE__,
+  "strip": "App/",
+  "released": "__RELEASED__",
+  "facts": [
+    "Finds your Jellyfin server on the Wi-Fi or tailnet and signs in with Quick Connect.",
+    "Downloads videos to the card for watching offline."
+  ]
+}

@@ -1,0 +1,38 @@
+name: Bug report
+description: Something doesn't work as the README says
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: MiniFin version
+      description: In App/MiniFin/version.txt on the card.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Onion OS version
+      description: MiniFin supports the Miyoo Mini Plus on Onion OS 4.4 only.
+      placeholder: "4.4.0"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Server
+      description: The Jellyfin version (Dashboard > About), and whether you reach it on the Wi-Fi or the tailnet.
+  - type: textarea
+    attributes:
+      label: Logs or output
+      description: "App/MiniFin/minifin.log. MiniFin never writes the sign-in token there, but remove host names and addresses before pasting."
+      render: text

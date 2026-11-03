@@ -1,0 +1,28 @@
+MiniFin includes third-party material under its own licence. The release
+zip carries each licence in the app's licenses/ folder.
+
+The MiniDeck library (https://github.com/zakijss/MiniDeck), compiled
+into the app, copyright ZJSS, MIT licence. Its NOTICE lists what it
+includes; in short:
+
+- Pixel Operator, by Jayvee Enaguas, CC0 1.0 (licenses/pixel-operator-CC0.txt).
+- Inter, copyright The Inter Project Authors, SIL Open Font License 1.1
+  (licenses/inter-OFL.txt).
+- GNU Unifont 18.0.01, used under the SIL Open Font License 1.1
+  (licenses/unifont-OFL.txt).
+- Tables generated from the Unicode Character Database 18.0, Unicode
+  License v3 (licenses/unicode-LICENSE.txt).
+- golang.org/x/net, golang.org/x/image, golang.org/x/text and
+  golang.org/x/crypto/x509roots/fallback, copyright The Go Authors, BSD
+  3-Clause licence (licenses/golang-x-*-LICENSE).
+
+MiniFin talks to Jellyfin servers through Jellyfin's public HTTP API. It
+includes no Jellyfin code. Jellyfin is a trademark of its owners; MiniFin
+is not made by or affiliated with the Jellyfin project or Miyoo.
+
+minifin-player (player/ in this repository) is a separate program under
+the GNU General Public License, version 2 or later, because it links
+Onion OS's GPL build of FFmpeg. Its source is in player/, and the release
+zip carries its LICENSE and NOTICE as licenses/minifin-player-LICENSE and
+licenses/minifin-player-NOTICE. MiniFin itself (cmd/) is MIT: it runs the
+player as a separate process and doesn't link it.

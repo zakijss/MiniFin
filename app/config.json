@@ -1,0 +1,6 @@
+{
+	"label":	"MiniFin",
+	"icon":	"/mnt/SDCARD/App/MiniFin/icon.png",
+	"launch":	"launch.sh",
+	"description":	"Movies and shows from your Jellyfin server"
+}
