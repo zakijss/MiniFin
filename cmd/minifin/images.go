@@ -270,7 +270,7 @@ func decodeImage(b []byte, w, h int) (*image.RGBA, error) {
 	if err != nil {
 		return nil, err
 	}
-	if cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width*cfg.Height > maxPixels {
+	if cfg.Width <= 0 || cfg.Height <= 0 || int64(cfg.Width)*int64(cfg.Height) > maxPixels { // int64: int is 32 bits on the device
 		return nil, fmt.Errorf("picture too large (%dx%d)", cfg.Width, cfg.Height)
 	}
 	decodeMu.Lock()

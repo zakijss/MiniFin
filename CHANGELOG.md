@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-11-03
+
+### Fixed
+
+- A poster whose header claims an enormous size is refused on the device too. The size check multiplied in 32 bits there and could wrap to a small number, letting a bad server's picture use up the memory.
+
 ## [1.0.0] - 2026-11-03
 
 ### Added
@@ -16,4 +22,5 @@ All notable changes are listed here. The format follows
 - Downloads for offline viewing, with a free-space check, going on from the last keyframe after an interruption, and an offline view of them when the server can't be reached.
 - Settings for the server and account, streaming quality, the subtitle default, the downloads folder, the player and Appearance.
 
+[1.0.1]: https://github.com/zakijss/MiniFin/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/zakijss/MiniFin/releases/tag/v1.0.0
