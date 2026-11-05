@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/hero.jpg" alt="A black Miyoo Mini Plus on a stand on a desk, showing a film's page in MiniFin, with two more Miyoos, a keyboard and a mug around it" width="100%"></p>
+
 [![CI](https://github.com/zakijss/MiniFin/actions/workflows/ci.yml/badge.svg)](https://github.com/zakijss/MiniFin/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/zakijss/MiniFin)](https://github.com/zakijss/MiniFin/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
