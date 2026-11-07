@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.3] - 2026-11-07
+
+### Fixed
+
+- A video from a slow server no longer stops with "the video decoder stopped working" after a few seconds. When the server can't keep up, the hardware decoder can stop handing out pictures while it still has some; minifin-player now restarts it at the next keyframe, as a seek does, so the picture freezes for about 5 s and goes on. It gives up only when three restarts in a row bring nothing. Why the decoder stalls on such a stream is not yet known.
+
 ## [1.0.2] - 2026-11-07
 
 ### Fixed
@@ -34,6 +40,7 @@ All notable changes are listed here. The format follows
 - Downloads for offline viewing, with a free-space check, going on from the last keyframe after an interruption, and an offline view of them when the server can't be reached.
 - Settings for the server and account, streaming quality, the subtitle default, the downloads folder, the player and Appearance.
 
+[1.0.3]: https://github.com/zakijss/MiniFin/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/zakijss/MiniFin/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/zakijss/MiniFin/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/zakijss/MiniFin/releases/tag/v1.0.0

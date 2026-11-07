@@ -50,7 +50,7 @@ One line per event, flushed as it's written. Times are seconds with one decimal 
 | `error <message>` | then exit 1 (or 2 for bad arguments) |
 
 `error` cases: the input can't be opened, there's no video stream, no decoder works, the network
-stalls for 60 s (`MINIFIN_STALL_SECONDS`), the hardware decoder stops producing frames for 5 s,
+stalls for 60 s (`MINIFIN_STALL_SECONDS`), the hardware decoder still produces no frames after three restarts in a row (it is restarted at the next keyframe each time it gives nothing for 5 s),
 there isn't enough video memory for the resolution, or an HTTP stream ends more than 30 s
 before the known duration (`stream ended early at X of Y s`, so a cut connection isn't taken
 for the end of the film). A failed open exits within the open timeout (30 s,

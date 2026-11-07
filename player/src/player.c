@@ -230,7 +230,7 @@ static void *video_thread_hw(void *arg)
     AVPacket pend;
     Slot pool[POOL];
     int have_pend = 0, serial = -1, need_key = 1, eos_sent = 0, shown_in_serial = 0;
-    int in_flight = 0, logged = 0, conv_fail = 0;
+    int in_flight = 0, logged = 0, conv_fail = 0, stalls = 0;
     int reorder = p->vctx && p->vctx->has_b_frames > 0 ? p->vctx->has_b_frames : 1;
     long sends = 0, fulls = 0;
     double skip_until = NAN, eos_at = 0, last_out = now_sec(), last_show = 0, last_t = -1e9, conv_time = 0, last_nudge = 0;
@@ -356,6 +356,7 @@ static void *video_thread_hw(void *arg)
             p->decoded++;
             if (in_flight > 0) in_flight--;
             last_out = now_sec();
+            stalls = 0;
             busy = 1;
             double t = ((int64_t)f.pts - PTS_BIAS) / 1e6;
             if (logged < 2) {
@@ -444,12 +445,30 @@ static void *video_thread_hw(void *arg)
         } else if (!nx && eos_sent && now - (eos_at > last_out ? eos_at : last_out) > 0.5) {
             p->video_finished = 1;
         }
-        /* packets go in but nothing comes out (seen when the decoder cannot
-         * get memory): stop rather than show a frozen picture */
+        /* packets go in but nothing comes out. A stream that trickles in
+         * from a slow server can leave the decoder holding its frames for
+         * good: start a fresh channel at the next keyframe, as a seek does.
+         * Three restarts in a row with nothing out (the decoder cannot get
+         * memory) stop rather than show a frozen picture. */
         if (!p->paused && sends > 0 && now - last_out > 5 && !eos_sent && (have_pend || pq_count(vq) > 0)) {
-            plog("video: the decoder gave nothing for 5 s");
-            p->fatal = 1;
-            break;
+            HwFrame f;
+            if (++stalls > 3) {
+                plog("video: the decoder gave nothing for 5 s, %d times", stalls - 1);
+                p->fatal = 1;
+                break;
+            }
+            plog("video: the decoder gave nothing for 5 s; restarting it at the next keyframe (%d)", stalls);
+            if (have_pend) av_free_packet(&pend);
+            have_pend = 0;
+            while (vdec_get(p->vdec, &f)) vdec_put(p->vdec, &f);
+            if (vdec_reset(p->vdec) < 0) {
+                p->fatal = 1;
+                break;
+            }
+            need_key = 1;
+            in_flight = 0;
+            last_out = now_sec();
+            continue;
         }
         if (!busy) {
             if (p->osd_dirty && now - p->last_present > 0.04) present(p);
