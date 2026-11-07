@@ -52,6 +52,12 @@ AOut *aout_open(int rate)
         free(a);
         return NULL;
     }
+    /* libpadsp looks up the real open() on its first call for an ordinary
+     * path, but its /dev/dsp path calls through that pointer unchecked: as
+     * the first call (it is dlopen()ed here, not preloaded) it jumps to NULL.
+     * An ordinary open first fills the pointer in. */
+    v = a->p_open("/dev/null", O_RDONLY);
+    if (v >= 0) a->p_close(v);
     /* libpadsp prints notes ("new pipe size: ...") on stdout, which is our
      * protocol: point stdout at stderr while it opens. */
     fflush(stdout);

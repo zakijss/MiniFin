@@ -4,6 +4,17 @@ All notable changes are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- minifin-player no longer crashes as a video starts. Onion's audio library (libpadsp) jumps to a null pointer when its first call opens /dev/dsp, which is always the case when it is loaded with dlopen() rather than preloaded; the player now opens /dev/null through it first. Before this, every video fell back to ffplay, or went back to its page when the crash came after playback had started.
+
+### Changed
+
+- minifin-player writes the crash address to its log on a crash.
+- The README screenshots are from a real device and server.
+
 ## [1.0.1] - 2026-11-03
 
 ### Fixed

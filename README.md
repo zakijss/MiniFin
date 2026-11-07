@@ -8,7 +8,7 @@
 
 An unofficial [Jellyfin](https://jellyfin.org) client for movies and shows on a Miyoo Mini Plus. It is part of [MiniDeck](https://github.com/zakijss/MiniDeck). Music stays in [MiniTape](https://github.com/zakijss/MiniTape).
 
-<p align="center"><img src="docs/home.png" alt="MiniFin's home screen: Continue Watching, Next Up and Recently Added rails of posters" width="32%"> <img src="docs/library.png" alt="A movie library as a poster grid, with the selected film's year and length below" width="32%"> <img src="docs/movie.png" alt="A film's page: poster, facts, time left, and Resume, Play from the start, Audio and Subtitles rows" width="32%"></p>
+<p align="center"><img src="docs/home.png" alt="MiniFin's home screen: Continue Watching, Next Up, and Recently Added showing the Matrix films" width="32%"> <img src="docs/library.png" alt="A Movies library of 14 films as a poster grid, with Akira selected and its year, length and rating below" width="32%"> <img src="docs/movie.png" alt="Excalibur's page: poster, facts, a note that it last played with minifin-player in hardware, and Play, Subtitles and Download rows" width="32%"></p>
 
 - Finds your server without typing: servers on the Wi-Fi answer Jellyfin's discovery broadcast, and MiniFin asks each device on your tailnet (port 8096, and HTTPS on 443, 8920 and 8084). You can still pick a tailnet device or type the address.
 - Signs in with Quick Connect: MiniFin shows a six-digit code, you approve it in Jellyfin on your phone, and you're in. A user name and password work too. Only the sign-in token is kept, sealed with the device key; the password is never stored.
