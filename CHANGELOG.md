@@ -4,11 +4,12 @@ All notable changes are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.2] - 2026-11-07
 
 ### Fixed
 
 - minifin-player no longer crashes as a video starts. Onion's audio library (libpadsp) jumps to a null pointer when its first call opens /dev/dsp, which is always the case when it is loaded with dlopen() rather than preloaded; the player now opens /dev/null through it first. Before this, every video fell back to ffplay, or went back to its page when the crash came after playback had started.
+- A long audio or subtitle track name on a video's page is cut with an ellipsis instead of running over the row's label and out of the menu (MiniDeck 1.0.2).
 
 ### Changed
 
@@ -33,5 +34,6 @@ All notable changes are listed here. The format follows
 - Downloads for offline viewing, with a free-space check, going on from the last keyframe after an interruption, and an offline view of them when the server can't be reached.
 - Settings for the server and account, streaming quality, the subtitle default, the downloads folder, the player and Appearance.
 
+[1.0.2]: https://github.com/zakijss/MiniFin/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/zakijss/MiniFin/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/zakijss/MiniFin/releases/tag/v1.0.0
