@@ -146,7 +146,7 @@ func (p *seasonPage) draw(a *app) {
 	case p.err != "" && len(p.items) == 0:
 		drawMessage(s, area, p.err, ui.Muted)
 	case len(p.items) == 0:
-		drawMessage(s, area, "No episodes here.", ui.Muted)
+		drawMessage(s, area, "No episodes here yet. Episodes added in Jellyfin show up here.", ui.Muted)
 	default:
 		for i, it := range p.items { // downloads move on while the page shows
 			p.list.Items[i].Sub = episodeSub(a, it)

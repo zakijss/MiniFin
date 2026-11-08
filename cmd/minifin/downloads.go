@@ -758,7 +758,7 @@ func openLocal(dl Download, start float64) (*localStream, float64, error) {
 		f, err := os.Open(filepath.Join(dl.dir, p.File))
 		if err != nil {
 			ls.Close()
-			return nil, 0, fmt.Errorf("a part of the download is missing: %v", err)
+			return nil, 0, fmt.Errorf("a part of the download is missing (%v). Delete it and download it again", err)
 		}
 		delta := (p.Start90 - first.Start90) + first.FirstPTS - p.FirstPTS
 		ls.parts = append(ls.parts, localPart{f: f, base: ls.size, size: p.Size, delta: delta})

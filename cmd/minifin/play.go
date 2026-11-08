@@ -148,7 +148,7 @@ func (a *app) playOnce(it Item, start float64, audio, sub int, extra playRequest
 		return playOutcome{}, false
 	}
 	if a.relay == nil {
-		a.scr.Notice(a.input, "Can't play", "MiniFin couldn't open its local relay for the player.")
+		a.scr.Notice(a.input, "Can't play", "MiniFin couldn't open its local relay for the player. Restart MiniFin.")
 		return playOutcome{}, false
 	}
 	a.scr.Alert("Starting the video", "Asking "+a.serverLabel()+" to prepare it…")
@@ -237,7 +237,7 @@ func (a *app) playLocal(dl Download, start float64, sub int, extra playRequest) 
 	}
 	if a.relay == nil {
 		ls.Close()
-		a.scr.Notice(a.input, "Can't play", "MiniFin couldn't open its local relay for the player.")
+		a.scr.Notice(a.input, "Can't play", "MiniFin couldn't open its local relay for the player. Restart MiniFin.")
 		return playOutcome{}, false
 	}
 	subPath := ""

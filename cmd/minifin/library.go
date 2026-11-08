@@ -193,7 +193,7 @@ func (p *libraryPage) draw(a *app) {
 		drawLoading(s, area, "Loading")
 		return
 	case p.total == 0:
-		msg := "Nothing here yet."
+		msg := "Nothing here yet. Videos added in Jellyfin show up here."
 		if p.q.Unplayed {
 			msg = "You've watched everything here. X shows it all again."
 		}
