@@ -4,6 +4,17 @@ All notable changes are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+## [1.0.4] - 2026-11-08
+
+### Changed
+
+- Empty libraries and seasons say that videos added in Jellyfin show up there.
+- A download with a missing part says to delete it and download it again.
+- "Can't play" says to restart MiniFin when the local relay won't open.
+- Grey and red small text is easier to read (MiniDeck 1.0.3).
+
 ## [1.0.3] - 2026-11-07
 
 ### Fixed
@@ -40,6 +51,8 @@ All notable changes are listed here. The format follows
 - Downloads for offline viewing, with a free-space check, going on from the last keyframe after an interruption, and an offline view of them when the server can't be reached.
 - Settings for the server and account, streaming quality, the subtitle default, the downloads folder, the player and Appearance.
 
+[Unreleased]: https://github.com/zakijss/MiniFin/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/zakijss/MiniFin/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/zakijss/MiniFin/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/zakijss/MiniFin/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/zakijss/MiniFin/compare/v1.0.0...v1.0.1
