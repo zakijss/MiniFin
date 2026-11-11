@@ -6,6 +6,15 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Mark a video watched or unwatched: X on its page, Y on a season's episodes. It clears the resume point, as Jellyfin's own apps do, and the open pages update.
+
+### Changed
+
+- Home shows Y Refresh in the footer; Y already reloaded the rails.
+- Go 1.27.4 and updated dependencies.
+
 ## [1.0.4] - 2026-11-08
 
 ### Changed

@@ -616,3 +616,47 @@ func TestTokenSealed(t *testing.T) {
 		t.Fatalf("settings %v", cfg)
 	}
 }
+
+// Y on an episode and X on a video's page mark it watched (or not) on the
+// server, clearing the resume point; offline nothing is sent.
+func TestMarkWatched(t *testing.T) {
+	f := newFakeJellyfin(t)
+	a, _ := testApp(t, f)
+	a.push(newHome(a))
+	s := newSeason(a, f.byID["se2"])
+	a.push(s)
+	a.pump(t, func() bool { return !s.loading })
+	sent := func(id string) map[string]any {
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		return f.userData[id]
+	}
+	s.list.Sel = 1 // ep2, half watched
+	press(a, ui.Y)
+	a.pump(t, func() bool { return sent("ep2") != nil })
+	if d := sent("ep2"); d["Played"] != true || d["PlaybackPositionTicks"] != float64(0) {
+		t.Fatalf("episode marked %v", d)
+	}
+	s.list.Sel = 0 // ep1, watched: marked unwatched
+	press(a, ui.Y)
+	a.pump(t, func() bool { return sent("ep1") != nil })
+	if d := sent("ep1"); d["Played"] != false {
+		t.Fatalf("watched episode marked %v", d)
+	}
+	m := newDetail(a, f.byID["m3"])
+	a.push(m)
+	a.pump(t, func() bool { return !m.loading })
+	press(a, ui.X)
+	a.pump(t, func() bool { return sent("m3") != nil })
+	if d := sent("m3"); d["Played"] != true {
+		t.Fatalf("movie marked %v", d)
+	}
+	a.offline = true
+	m4 := newDetail(a, f.byID["m4"])
+	a.push(m4)
+	press(a, ui.X)
+	time.Sleep(50 * time.Millisecond)
+	if sent("m4") != nil {
+		t.Fatal("marked while offline")
+	}
+}

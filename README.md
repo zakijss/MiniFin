@@ -21,7 +21,7 @@ An unofficial [Jellyfin](https://jellyfin.org) client for movies and shows on a 
 
 ## Using it
 
-The first start looks for servers and signs in. **A** opens, **B** goes back, **START** on Home opens Settings, and **MENU** quits.
+The first start looks for servers and signs in. **A** opens, **B** goes back, **START** on Home opens Settings, and **MENU** quits. On Home, **Y** reloads the rails. **X** on a video's page, or **Y** on a season's episodes, marks it watched or unwatched on the server (which clears where you were in it).
 
 Videos play in minifin-player, MiniFin's own player, which decodes with the device's hardware decoder. It can seek within a stream: the server starts a new transcode at that point and stops the old one. The video's page says which player played it last, and whether it decoded in hardware or software. Without it, or if it can't start, MiniFin uses Onion's ffplay and says so on the video's page. In minifin-player, **A** pauses, **Left**/**Right** skip 10 seconds and **L1**/**R1** a minute, **Up**/**Down** set the volume, **Y** turns subtitles on and off, **X** changes the audio track and **SELECT** the subtitles (the video picks up where it was), **R2**/**L2** go to the next or previous episode (press twice), **START** keeps the overlay up, and **B** stops. With ffplay, **A** pauses, **B** or **MENU** stops, and subtitles are drawn into the picture by the server. Picture-based subtitles (PGS, VobSub) are always drawn in by the server.
 

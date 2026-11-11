@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -286,11 +287,46 @@ func (a *app) afterPlay(it Item, out playOutcome) {
 		log.Printf("playback of %s: %s (%s)", it.ID, out.Err, out.Player)
 	}
 	log.Printf("stopped %s at %.0f s (ended %v) with %s", it.ID, out.Pos, out.Ended, out.Player)
+	a.refreshPages()
+}
+
+// refreshPages reloads every open page that shows resume points or
+// watched marks.
+func (a *app) refreshPages() {
 	for _, p := range a.stack {
 		if r, ok := p.(refresher); ok {
 			r.refresh(a)
 		}
 	}
+}
+
+// markPlayed marks a video watched or not on the server. Either way its
+// resume point goes, as when Jellyfin's own apps do it. Only online: the
+// callers leave the button out offline.
+func (a *app) markPlayed(it Item, played bool) {
+	a.later(func() func() {
+		err := a.c.SetUserData(it.ID, 0, played)
+		return func() {
+			if err != nil {
+				if errors.Is(err, errSignedOut) {
+					a.failed(err)
+					return
+				}
+				a.scr.Notice(a.input, "Couldn't mark it", errText(err))
+				return
+			}
+			a.dl.SetPosition(it.ID, 0, played) // the copy on the card agrees
+			a.refreshPages()
+		}
+	})
+}
+
+// markLabel is the footer label for marking it: the opposite of how it is.
+func markLabel(it Item) string {
+	if it.Played() {
+		return "Mark unwatched"
+	}
+	return "Mark watched"
 }
 
 func fileExists(p string) bool {

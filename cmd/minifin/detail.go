@@ -205,7 +205,11 @@ func (p *detailPage) draw(a *app) {
 	if kind == "" {
 		kind = "Video"
 	}
-	top := s.StaticFrame(kind, "", ui.Hint{Button: "A", Label: "Select"}, ui.Hint{Button: "Y", Label: "About"}, ui.Hint{Button: "B", Label: "Back"})
+	hints := []ui.Hint{{Button: "A", Label: "Select"}, {Button: "Y", Label: "About"}}
+	if p.it.IsPlayable() && !a.offline {
+		hints = append(hints, ui.Hint{Button: "X", Label: markLabel(p.it)})
+	}
+	top := s.StaticFrame(kind, "", append(hints, ui.Hint{Button: "B", Label: "Back"})...)
 	// the poster
 	pr := image.Rect(24, top+6, 24+bigW, top+6+bigH)
 	var img image.Image
@@ -295,6 +299,11 @@ func (p *detailPage) handle(a *app, ev ui.Event) bool {
 		return false
 	case ui.Start:
 		p.playNow(a, false)
+		return true
+	case ui.X:
+		if p.it.IsPlayable() && !a.offline {
+			a.markPlayed(p.it, !p.it.Played())
+		}
 		return true
 	case ui.A:
 		if it == nil {

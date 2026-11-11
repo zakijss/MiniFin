@@ -137,8 +137,11 @@ func (p *seasonPage) draw(a *app) {
 	if n := len(p.items); n > 0 {
 		sub = strings.TrimPrefix(sub+" · "+plural(n, "episode"), " · ")
 	}
-	top := s.StaticFrame(p.season.Name, sub, ui.Hint{Button: "A", Label: "Open"}, ui.Hint{Button: "START", Label: "Play"},
-		ui.Hint{Button: "X", Label: "Download"}, ui.Hint{Button: "B", Label: "Back"})
+	hints := []ui.Hint{{Button: "A", Label: "Open"}, {Button: "START", Label: "Play"}, {Button: "X", Label: "Download"}}
+	if sel := p.list.Selected(); sel != nil && !a.offline {
+		hints = append(hints, ui.Hint{Button: "Y", Label: markLabel(sel.Value.(Item))})
+	}
+	top := s.StaticFrame(p.season.Name, sub, append(hints, ui.Hint{Button: "B", Label: "Back"})...)
 	area := listArea(top)
 	switch {
 	case p.loading && len(p.items) == 0:
@@ -173,6 +176,12 @@ func (p *seasonPage) handle(a *app, ev ui.Event) bool {
 				start = 0
 			}
 			a.play(it, start, au, su)
+		}
+		return true
+	case ui.Y:
+		if sel != nil && !a.offline {
+			it := sel.Value.(Item)
+			a.markPlayed(it, !it.Played())
 		}
 		return true
 	case ui.X:
