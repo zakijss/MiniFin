@@ -6,6 +6,12 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-12
+
+### Changed
+
+- Reaches the WireGuard and NetBird networks MiniScale 1.2 can join, through its proxy (MiniDeck 1.1.0).
+
 ## [1.1.0] - 2026-11-12
 
 ### Added
@@ -62,7 +68,8 @@ All notable changes are listed here. The format follows
 - Downloads for offline viewing, with a free-space check, going on from the last keyframe after an interruption, and an offline view of them when the server can't be reached.
 - Settings for the server and account, streaming quality, the subtitle default, the downloads folder, the player and Appearance.
 
-[Unreleased]: https://github.com/zakijss/MiniFin/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/zakijss/MiniFin/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/zakijss/MiniFin/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zakijss/MiniFin/compare/v1.0.4...v1.1.0
 [1.0.4]: https://github.com/zakijss/MiniFin/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/zakijss/MiniFin/compare/v1.0.2...v1.0.3
