@@ -232,7 +232,7 @@ func (h *homePage) draw(a *app) {
 	s := a.scr
 	s.SetTicker("")
 	top := s.StaticFrame("MiniFin", "", ui.Hint{Button: "A", Label: "Open"}, ui.Hint{Button: "X", Label: "Search"},
-		ui.Hint{Button: "Y", Label: "Refresh"}, ui.Hint{Button: "START", Label: "Settings"}, ui.Hint{Button: "B", Label: "Exit"})
+		ui.Hint{Button: "START", Label: "Settings"}, ui.Hint{Button: "B", Label: "Exit"})
 	rails := h.shown()
 	h.row = min(h.row, len(rails)-1)
 	rh := railHeight()
