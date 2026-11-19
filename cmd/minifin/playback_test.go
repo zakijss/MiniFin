@@ -500,3 +500,42 @@ func TestPlayEnv(t *testing.T) {
 		t.Fatal("no Onion library path")
 	}
 }
+
+// MiniFin being stopped (SIGTERM from a power-off) mid-video: by the time
+// stopPlayer returns, and MiniFin exits, the server has the place.
+func TestStopKeepsPlace(t *testing.T) {
+	f := newFakeJellyfin(t)
+	a, _ := testApp(t, f)
+	a.pl.own = script(t, a.dir, "minifin-player", `trap 'echo "quit 42.0"; exit 0' TERM
+echo "pos 41.0"
+while :; do sleep 0.05; done
+`)
+	stopped := func() (map[string]any, bool) {
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		started := false
+		for _, r := range f.reports {
+			if r.Path == "/Sessions/Playing/Stopped" {
+				return r.Body, true
+			}
+			started = started || r.Path == "/Sessions/Playing"
+		}
+		return nil, started
+	}
+	got := make(chan map[string]any, 1)
+	go func() {
+		for end := time.Now().Add(10 * time.Second); time.Now().Before(end); {
+			if _, started := stopped(); started {
+				break
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+		a.stopPlayer()
+		body, _ := stopped()
+		got <- body
+	}()
+	a.play(f.byID["m3"], 40, -1, -1)
+	if body := <-got; body == nil || body["PositionTicks"].(float64) != 42*ticksPerSecond {
+		t.Fatalf("when stopPlayer returned, the server had %v", body)
+	}
+}

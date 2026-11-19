@@ -379,11 +379,12 @@ func stayAwake() (release func()) {
 }
 
 // withPlayer hands the screen to a player: MiniFin's screen closes (its
-// moving background stops drawing), the player runs, and the screen opens
-// again with whatever the player left in the framebuffer cleared. While it
-// runs, stopPlayer (MiniFin being stopped) ends it the gentle way: run's
-// context is cancelled, which sends the player SIGTERM.
-func (a *app) withPlayer(run func(ctx context.Context) playOutcome) playOutcome {
+// moving background stops drawing), the player runs, save keeps where it
+// stopped, and the screen opens again with whatever the player left in the
+// framebuffer cleared. While it runs, stopPlayer (MiniFin being stopped)
+// ends it the gentle way: run's context is cancelled, which sends the
+// player SIGTERM; stopPlayer waits for save too, so the place isn't lost.
+func (a *app) withPlayer(run func(ctx context.Context) playOutcome, save func(playOutcome)) playOutcome {
 	pauseMiniTape()
 	restoreCPU := cpuBoost()
 	release := stayAwake()
@@ -394,13 +395,14 @@ func (a *app) withPlayer(run func(ctx context.Context) playOutcome) playOutcome 
 	a.playStop, a.playDone = cancel, done
 	a.playMu.Unlock()
 	out := run(ctx)
+	cancel()
+	release()
+	restoreCPU()
+	save(out)
 	a.playMu.Lock()
 	a.playStop, a.playDone = nil, nil
 	a.playMu.Unlock()
-	cancel()
 	close(done)
-	release()
-	restoreCPU()
 	var err error
 	for i := 0; i < 10; i++ {
 		var s *ui.Screen
@@ -417,7 +419,8 @@ func (a *app) withPlayer(run func(ctx context.Context) playOutcome) playOutcome 
 }
 
 // stopPlayer ends a video playing now, if any, and waits for the player
-// to leave (SIGTERM, then SIGKILL after 5 s: see players.command). It
+// to leave (SIGTERM, then SIGKILL after 5 s: see players.command) and its
+// place to be saved (the server told, up to 6 s, or pending.json). It
 // reports whether one was playing.
 func (a *app) stopPlayer() bool {
 	a.playMu.Lock()
@@ -429,8 +432,8 @@ func (a *app) stopPlayer() bool {
 	stop()
 	select {
 	case <-done:
-	case <-time.After(8 * time.Second):
-		log.Printf("the player is still running after SIGKILL")
+	case <-time.After(15 * time.Second):
+		log.Printf("the video still hasn't closed")
 	}
 	return true
 }

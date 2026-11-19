@@ -188,15 +188,16 @@ func (a *app) playOnce(it Item, start float64, audio, sub int, extra playRequest
 	log.Printf("playing %s from %.0f s at %d kbit/s", it.ID, start, kbps)
 	out := a.withPlayer(func(ctx context.Context) playOutcome {
 		return a.pl.play(ctx, req, a.input, rep.update)
+	}, func(out playOutcome) {
+		a.relay.Forget()
+		if subPath != "" {
+			os.Remove(subPath)
+		}
+		failed := out.Err != "" && out.Pos <= start+5
+		if !rep.stop(out.Pos, out.Ended, plan.Runtime, failed) {
+			a.pend.add(it.ID, endPos(out, plan.Runtime), out.Ended)
+		}
 	})
-	a.relay.Forget()
-	if subPath != "" {
-		os.Remove(subPath)
-	}
-	failed := out.Err != "" && out.Pos <= start+5
-	if !rep.stop(out.Pos, out.Ended, plan.Runtime, failed) {
-		a.pend.add(it.ID, endPos(out, plan.Runtime), out.Ended)
-	}
 	a.afterPlay(it, out)
 	return out, true
 }
@@ -265,14 +266,14 @@ func (a *app) playLocal(dl Download, start float64, sub int, extra playRequest) 
 	log.Printf("playing %s from the card from %.0f s", dl.ID, at)
 	out := a.withPlayer(func(ctx context.Context) playOutcome {
 		return a.pl.play(ctx, req, a.input, update)
+	}, func(out playOutcome) {
+		a.relay.Forget()
+		pos := endPos(out, runtime)
+		a.dl.SetPosition(dl.ID, pos, out.Ended)
+		if rep == nil || !rep.stop(out.Pos, out.Ended, runtime, false) {
+			a.pend.add(dl.ID, pos, out.Ended)
+		}
 	})
-	a.relay.Forget()
-	pos := endPos(out, runtime)
-	played := out.Ended
-	a.dl.SetPosition(dl.ID, pos, played)
-	if rep == nil || !rep.stop(out.Pos, out.Ended, runtime, false) {
-		a.pend.add(dl.ID, pos, played)
-	}
 	a.afterPlay(dl.Item, out)
 	return out, true
 }
