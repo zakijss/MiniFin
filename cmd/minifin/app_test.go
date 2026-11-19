@@ -660,3 +660,41 @@ func TestMarkWatched(t *testing.T) {
 		t.Fatal("marked while offline")
 	}
 }
+
+// The audio and subtitles the user picked carry over to the next
+// episode, by language; the defaults stay when nothing was picked.
+func TestCarryTracks(t *testing.T) {
+	one := 1
+	ep := func(audio, subs []string) Item {
+		var ms []MediaStream
+		for _, l := range audio {
+			ms = append(ms, MediaStream{Type: "Audio", Index: len(ms) + 1, Language: l})
+		}
+		for _, l := range subs {
+			ms = append(ms, MediaStream{Type: "Subtitle", Index: len(ms) + 1, Language: l})
+		}
+		return Item{Type: "Episode", MediaSources: []MediaSource{{MediaStreams: ms, DefaultAudioStreamIndex: &one}}}
+	}
+	// audio 1 and 2, then the subtitles from 3
+	prev := ep([]string{"eng", "jpn"}, []string{"eng"})
+	next := ep([]string{"jpn", "eng"}, []string{"fre", "eng"})
+	for _, c := range []struct {
+		audio, sub, wantA, wantS int
+	}{
+		{1, -1, 1, -1}, // the defaults: the next one's own
+		{2, 3, 1, 4},   // Japanese with English subtitles
+		{1, 3, 1, 4},   // English subtitles only
+	} {
+		if a, s := carryTracks(prev, c.audio, c.sub, next, 1, -1, ""); a != c.wantA || s != c.wantS {
+			t.Errorf("picked %d/%d: next plays %d/%d, want %d/%d", c.audio, c.sub, a, s, c.wantA, c.wantS)
+		}
+	}
+	// subtitles turned off stay off
+	if _, s := carryTracks(prev, 1, -1, next, 1, 4, "on"); s != -1 {
+		t.Errorf("subtitles off became %d", s)
+	}
+	// a language the next one hasn't: its default
+	if a, _ := carryTracks(ep([]string{"eng", "ger"}, nil), 2, -1, next, 1, -1, ""); a != 1 {
+		t.Errorf("German audio became %d", a)
+	}
+}

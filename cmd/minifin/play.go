@@ -78,6 +78,7 @@ func (a *app) play(it Item, start float64, audio, sub int) {
 		if to == nil {
 			return
 		}
+		last, lastAudio, lastSub := it, audio, sub
 		it = *to
 		if !a.offline {
 			if full, err := a.c.Item(it.ID); err == nil {
@@ -89,8 +90,59 @@ func (a *app) play(it Item, start float64, audio, sub int) {
 			start = it.Resume()
 		}
 		audio, sub = pickStreams(it, nil, nil, a.cfg.Subtitles)
+		audio, sub = carryTracks(last, lastAudio, lastSub, it, audio, sub, a.cfg.Subtitles)
 		a.push(newDetail(a, it)) // B after it goes back where the user was
 	}
+}
+
+// carryTracks keeps the user's track choices for the next episode: when
+// audio or sub differ from what prev plays by default, the next one (next,
+// with its own defaults nAudio and nSub) gets the track in the same
+// language, or subtitles off. A language it doesn't have keeps its default.
+func carryTracks(prev Item, audio, sub int, next Item, nAudio, nSub int, subMode string) (int, int) {
+	dAudio, dSub := pickStreams(prev, nil, nil, subMode)
+	if audio >= 0 && audio != dAudio {
+		if i, ok := sameLanguage(prev, next, "Audio", audio); ok {
+			nAudio = i
+		}
+	}
+	switch {
+	case sub == dSub:
+	case sub < 0:
+		nSub = -1
+	default:
+		if i, ok := sameLanguage(prev, next, "Subtitle", sub); ok {
+			nSub = i
+		}
+	}
+	return nAudio, nSub
+}
+
+// sameLanguage finds next's track of type typ in the language of prev's
+// track index, a forced one only for a forced one where it can.
+func sameLanguage(prev, next Item, typ string, index int) (int, bool) {
+	var want *MediaStream
+	for _, s := range streamsOf(prev, typ) {
+		if s.Index == index {
+			want = &s
+		}
+	}
+	if want == nil || want.Language == "" {
+		return 0, false
+	}
+	found, at := false, 0
+	for _, s := range streamsOf(next, typ) {
+		if s.Language != want.Language {
+			continue
+		}
+		if s.IsForced == want.IsForced {
+			return s.Index, true
+		}
+		if !found {
+			found, at = true, s.Index
+		}
+	}
+	return at, found
 }
 
 // epTitle is how the player names an episode for R2 / L2.
