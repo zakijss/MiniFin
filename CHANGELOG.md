@@ -6,6 +6,16 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-19
+
+### Added
+
+- The next episode plays with the audio and subtitles you picked for the one before, in the same language, when it has them.
+
+### Fixed
+
+- MiniFin stopped mid-video (a power-off, or MiniTop) no longer loses the place: it waits until the server has it, or it is saved for later, before closing.
+
 ## [1.1.1] - 2026-11-12
 
 ### Changed
@@ -68,7 +78,8 @@ All notable changes are listed here. The format follows
 - Downloads for offline viewing, with a free-space check, going on from the last keyframe after an interruption, and an offline view of them when the server can't be reached.
 - Settings for the server and account, streaming quality, the subtitle default, the downloads folder, the player and Appearance.
 
-[Unreleased]: https://github.com/zakijss/MiniFin/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/zakijss/MiniFin/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/zakijss/MiniFin/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/zakijss/MiniFin/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zakijss/MiniFin/compare/v1.0.4...v1.1.0
 [1.0.4]: https://github.com/zakijss/MiniFin/compare/v1.0.3...v1.0.4
