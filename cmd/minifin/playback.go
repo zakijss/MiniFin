@@ -55,10 +55,10 @@ import (
 // and exits 0 after end or quit, non-zero on a failure.
 //
 // It dlopens Onion's libpadsp itself, so it gets no LD_PRELOAD (ffplay
-// does). MiniFin stops either player with SIGTERM, and with SIGKILL only
-// if it is still running 5 s later: killing a player outright mid-video
-// can wedge the device's MI driver stack and freeze the screen until a
-// reboot.
+// does). MiniFin stops either player with SIGTERM only, never SIGKILL:
+// killing a player mid-video can wedge the device's MI driver stack and
+// freeze the screen until a reboot. A player still running 5 s after
+// SIGTERM is left alone, and MiniFin says so.
 
 // playRequest is one video to play.
 type playRequest struct {
@@ -251,14 +251,14 @@ type players struct {
 	// startWait: minifin-player failing within this time, before playing
 	// anything, counts as "couldn't start", and ffplay takes over.
 	startWait time.Duration
-	// killWait is how long a player has to leave after SIGTERM before it
-	// gets SIGKILL.
-	killWait time.Duration
+	// quitWait is how long MiniFin waits for a player to leave after
+	// SIGTERM before it stops waiting and leaves it running.
+	quitWait time.Duration
 }
 
 func newPlayers(dir string) *players {
 	pl := &players{own: dir + "/minifin-player", ffplay: "/mnt/SDCARD/.tmp_update/bin/ffplay",
-		ffplayDir: "/mnt/SDCARD/.tmp_update", startWait: 4 * time.Second, killWait: 5 * time.Second}
+		ffplayDir: "/mnt/SDCARD/.tmp_update", startWait: 4 * time.Second, quitWait: 5 * time.Second}
 	if p := os.Getenv("MINIFIN_PLAYER"); p != "" {
 		pl.own = p
 	}
@@ -361,7 +361,7 @@ func (pl *players) runOwn(ctx context.Context, req playRequest, input <-chan ui.
 	if len(req.Subs) > 1 {
 		args = append(args, "--subs", trackList(req.Subs), "--subs-current", strconv.Itoa(req.SubsCur))
 	}
-	cmd := pl.command(ctx, pl.own, args...)
+	cmd := exec.Command(pl.own, args...)
 	cmd.Env = playEnv(false)
 	cmd.Stderr = os.Stderr // into minifin.log
 	stdout, err := cmd.StdoutPipe()
@@ -375,6 +375,7 @@ func (pl *players) runOwn(ctx context.Context, req playRequest, input <-chan ui.
 		return out, false
 	}
 	stopInput := ignoreInput(input)
+	wait := pl.stopOn(ctx, cmd, stdout)
 	st := &playerState{start: req.Start, Pos: req.Start, Audio: -1, Sub: -1}
 	sc := bufio.NewScanner(stdout)
 	sc.Buffer(make([]byte, 4096), 64<<10)
@@ -388,9 +389,13 @@ func (pl *players) runOwn(ctx context.Context, req playRequest, input <-chan ui.
 			update(st.Pos, st.Paused)
 		}
 	}
-	werr := cmd.Wait()
+	werr, stuck := wait()
 	stopInput()
 	out.Pos, out.Ended, out.Err, out.Decoder = st.Pos, st.Ended, st.Err, st.Decoder
+	if stuck {
+		out.Err = notQuit
+		return out, true
+	}
 	if st.Quit && st.Err == "" {
 		out.Want = st.Want
 		if st.Audio < len(req.Audio) {
@@ -441,7 +446,7 @@ func (pl *players) runFFplay(ctx context.Context, req playRequest, input <-chan 
 	out := playOutcome{Player: "ffplay", Pos: req.Start}
 	ctx, stop := context.WithCancel(ctx)
 	defer stop()
-	cmd := pl.command(ctx, pl.ffplay, ffplayArgs(req)...)
+	cmd := exec.Command(pl.ffplay, ffplayArgs(req)...)
 	cmd.Env = playEnv(true)
 	if pl.ffplayDir != "" {
 		cmd.Dir = pl.ffplayDir
@@ -455,6 +460,7 @@ func (pl *players) runFFplay(ctx context.Context, req playRequest, input <-chan 
 		out.Err = "can't start ffplay: " + err.Error()
 		return out
 	}
+	wait := pl.stopOn(ctx, cmd, stderr)
 	// update is called from the button goroutine and the stderr loop: one
 	// at a time
 	var upMu sync.Mutex
@@ -493,7 +499,7 @@ func (pl *players) runFFplay(ctx context.Context, req playRequest, input <-chan 
 					continue
 				case ui.B, ui.Menu:
 					stoppedByUs = true
-					stop() // SIGTERM, then SIGKILL if it hangs on
+					stop() // SIGTERM
 				}
 				mu.Unlock()
 			}
@@ -521,7 +527,7 @@ func (pl *players) runFFplay(ctx context.Context, req playRequest, input <-chan 
 			log.Printf("ffplay: %s", truncate(t, 160))
 		}
 	}
-	werr := cmd.Wait()
+	werr, stuck := wait()
 	close(done)
 	buttons.Wait()
 	ignoreInput(input)() // the press that quit ffplay isn't MiniFin's
@@ -531,6 +537,8 @@ func (pl *players) runFFplay(ctx context.Context, req playRequest, input <-chan 
 	rt := req.Runtime
 	nearEnd := rt > 0 && (out.Pos >= rt-60 || out.Pos >= rt*0.95)
 	switch {
+	case stuck:
+		out.Err = notQuit
 	case stoppedByUs:
 	case werr == nil:
 		out.Ended = nearEnd || rt <= 0
@@ -540,16 +548,47 @@ func (pl *players) runFFplay(ctx context.Context, req playRequest, input <-chan 
 	return out
 }
 
-// command runs a player that ctx stops: SIGTERM when ctx is done, and
-// SIGKILL only if it is still there killWait later.
-func (pl *players) command(ctx context.Context, path string, args ...string) *exec.Cmd {
-	cmd := exec.CommandContext(ctx, path, args...)
-	cmd.Cancel = func() error { return cmd.Process.Signal(syscall.SIGTERM) }
-	cmd.WaitDelay = pl.killWait
-	if cmd.WaitDelay <= 0 {
-		cmd.WaitDelay = 5 * time.Second
+// notQuit is the error shown when a player ignored SIGTERM.
+const notQuit = "the player didn't quit when asked and is still running. If the screen or sound stays stuck, restart the device"
+
+// stopOn sends the started player SIGTERM when ctx is done, and nothing
+// harsher: SIGKILL can wedge the MI video drivers until a reboot. The
+// returned wait waits for the player to exit, after its output (out) has
+// been read. If it is still there quitWait after SIGTERM, out is closed so
+// the reading ends, and wait stops waiting and reports it stuck: the
+// player is left running rather than holding up MiniFin for good.
+func (pl *players) stopOn(ctx context.Context, cmd *exec.Cmd, out io.Closer) (wait func() (err error, stuck bool)) {
+	stuck, done := make(chan struct{}), make(chan struct{})
+	quit := pl.quitWait
+	if quit <= 0 {
+		quit = 5 * time.Second
 	}
-	return cmd
+	go func() {
+		select {
+		case <-ctx.Done():
+		case <-done:
+			return
+		}
+		cmd.Process.Signal(syscall.SIGTERM)
+		select {
+		case <-time.After(quit):
+			log.Printf("player: still running %v after SIGTERM; left running", quit)
+			close(stuck)
+			out.Close()
+		case <-done:
+		}
+	}()
+	return func() (error, bool) {
+		defer close(done)
+		exited := make(chan error, 1)
+		go func() { exited <- cmd.Wait() }() // left waiting if the player never exits
+		select {
+		case err := <-exited:
+			return err, false
+		case <-stuck:
+			return nil, true
+		}
+	}
 }
 
 // ignoreInput reads and drops the buttons until the returned stop is

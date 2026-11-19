@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -412,7 +413,7 @@ echo "pos 101.0"
 echo "error stream ended early at 101.0 of 7920.0 s"
 exit 1
 `)
-	pl := &players{own: own, ffplay: "/nonexistent", startWait: 4 * time.Second, killWait: time.Second}
+	pl := &players{own: own, ffplay: "/nonexistent", startWait: 4 * time.Second, quitWait: time.Second}
 	out := pl.play(context.Background(), playRequest{URL: "http://x/v/1.ts", Start: 100, Runtime: 7920}, make(chan ui.Event), func(float64, bool) {})
 	if out.Ended || out.Player != "minifin-player" || !strings.Contains(out.Err, "ended early") || out.Pos != 101 {
 		t.Fatalf("outcome %+v", out)
@@ -428,13 +429,15 @@ exit 1
 	}
 }
 
-// Stopping a player: SIGTERM first, and SIGKILL only if it is still
-// there killWait later (kill -9 mid-video can wedge the device's MI
-// drivers).
+// Stopping a player: SIGTERM only (kill -9 mid-video can wedge the
+// device's MI drivers). One still there quitWait later is left running,
+// and the outcome says so.
 func TestPlayerStopOrder(t *testing.T) {
 	dir := t.TempDir()
 	signals := filepath.Join(dir, "signals")
+	pidFile := filepath.Join(dir, "pid")
 	stubborn := script(t, dir, "stubborn-player", `trap 'echo TERM >> `+signals+`' TERM
+echo $$ > `+pidFile+`
 echo "pos 10.0"
 while :; do sleep 0.05; done
 `)
@@ -444,10 +447,10 @@ while :; do sleep 0.05; done
 `)
 	for _, c := range []struct {
 		player string
-		killed bool
+		stuck  bool
 	}{{stubborn, true}, {polite, false}} {
 		os.Remove(signals)
-		pl := &players{own: c.player, ffplay: "/nonexistent", startWait: 50 * time.Millisecond, killWait: 1500 * time.Millisecond}
+		pl := &players{own: c.player, ffplay: "/nonexistent", startWait: 50 * time.Millisecond, quitWait: 1500 * time.Millisecond}
 		ctx, cancel := context.WithCancel(context.Background())
 		seen := make(chan struct{}, 1)
 		go func() {
@@ -466,12 +469,20 @@ while :; do sleep 0.05; done
 		if !strings.HasPrefix(string(b), "TERM") {
 			t.Fatalf("%s: no SIGTERM first (%q)", filepath.Base(c.player), b)
 		}
-		if c.killed && took < 1500*time.Millisecond {
-			t.Fatalf("stubborn player killed after %v, before the wait", took)
+		if c.stuck {
+			if took < 1500*time.Millisecond || !strings.Contains(out.Err, "didn't quit") {
+				t.Fatalf("stubborn player: left after %v, %+v", took, out)
+			}
+			b, _ := os.ReadFile(pidFile)
+			pid, _ := strconv.Atoi(strings.TrimSpace(string(b)))
+			if pid <= 0 || syscall.Kill(pid, 0) != nil {
+				t.Fatalf("stubborn player (pid %d) was killed", pid)
+			}
+			syscall.Kill(pid, syscall.SIGKILL) // the test's own cleanup
 		}
 		// the polite one leaves at once (plus MiniFin's 300 ms of ignoring
 		// the buttons after a player)
-		if !c.killed && (took > time.Second || out.Pos != 11) {
+		if !c.stuck && (took > time.Second || out.Pos != 11) {
 			t.Fatalf("polite player: %v, %+v", took, out)
 		}
 		if took > 4*time.Second {

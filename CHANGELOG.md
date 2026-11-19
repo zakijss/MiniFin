@@ -15,6 +15,7 @@ All notable changes are listed here. The format follows
 ### Fixed
 
 - MiniFin stopped mid-video (a power-off, or MiniTop) no longer loses the place: it waits until the server has it, or it is saved for later, before closing.
+- The video player is never forced to quit (SIGKILL), which can freeze the screen until a restart. It is asked to quit; if it is still running five seconds later, MiniFin stops waiting, leaves it running and says so.
 
 ## [1.1.1] - 2026-11-12
 

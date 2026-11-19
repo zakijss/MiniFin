@@ -419,9 +419,9 @@ func (a *app) withPlayer(run func(ctx context.Context) playOutcome, save func(pl
 }
 
 // stopPlayer ends a video playing now, if any, and waits for the player
-// to leave (SIGTERM, then SIGKILL after 5 s: see players.command) and its
-// place to be saved (the server told, up to 6 s, or pending.json). It
-// reports whether one was playing.
+// to leave (SIGTERM only; one still there 5 s later is left running: see
+// players.stopOn) and its place to be saved (the server told, up to 6 s,
+// or pending.json). It reports whether one was playing.
 func (a *app) stopPlayer() bool {
 	a.playMu.Lock()
 	stop, done := a.playStop, a.playDone
