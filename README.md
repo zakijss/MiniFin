@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/hero.jpg" alt="A smoked black Miyoo Mini Plus on a stand on a pale stone table with teacups, showing MiniFin's home screen, with a white one open at a film and a clear purple one showing the library" width="100%"></p>
+<p align="center"><img src="docs/hero.jpg" alt="A smoked black Miyoo Mini Plus on a stand showing MiniFin's home screen, on a dark wooden table in a hotel room in the evening, with an 8 mm projector, an old video camera, and a white and a clear purple one lying beside it" width="100%"></p>
 
 https://github.com/user-attachments/assets/ae28e887-a4ea-4f75-b5ad-278b55b7cb97
 
